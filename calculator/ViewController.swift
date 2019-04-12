@@ -14,23 +14,30 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         initialize()
-        common()
+        show()
     }
 
     var sum:Int!
-    var sumope:String!
+    var sumope:String! //"+" or "-"
     var pro:Int!
-    var proope:String!
+    var proope:String! //"" or "*" or "/"
     var tmpnum:Int!
-    var eq:Bool!
+    var shownum:Int!
+    var prevbtn:String! //"num" or "+-" or "*/" or "="
 
     func initialize(){
         sum = 0
-        sumope = ""
-        pro = 0
+        sumope = "+"
+        pro = 1
         proope = ""
         tmpnum = 0
-        eq = false
+        shownum = 0
+        prevbtn = "="
+    }
+    
+    func show(){
+        print(sum, sumope, pro, proope, tmpnum)
+        lbl.text = String(shownum)
     }
     
     @IBOutlet var lbl:UILabel!
@@ -45,111 +52,133 @@ class ViewController: UIViewController {
     @IBAction func numbtn7(){numbtn(num:7)}
     @IBAction func numbtn8(){numbtn(num:8)}
     @IBAction func numbtn9(){numbtn(num:9)}
-    
-    @IBAction func plusbtn(){
-        if(proope != ""){
-            procalc()
+    @IBAction func plusbtn(){plusminusbtn(ope: "+")}
+    @IBAction func minusbtn(){plusminusbtn(ope: "-")}
+    @IBAction func productbtn(){productdividebtn(ope: "*")}
+    @IBAction func dividebtn(){productdividebtn(ope: "/")}
+
+    func plusminusbtn(ope:String){
+        if prevbtn == "num"{
+            tmpnum = shownum
+            strongCalc()
+            sumope = ope
+            proope = ""
         }
-        if(sumope != ""){
-            sumcalc()
+        if prevbtn == "+-" || prevbtn == "*/"{
+            sumope = ope
+            proope = ""
         }
-        common()
-        sumope = "+"
+        if prevbtn == "="{
+            tmpnum = shownum
+            sumope = ope
+            proope = ""
+        }
+        prevbtn = "+-"
+        show()
     }
     
-    @IBAction func minusbtn(){
-        if(proope != ""){
-            procalc()
+    func productdividebtn(ope:String){
+        if prevbtn == "num"{
+            tmpnum = shownum
+            weakCalc()
+            proope = ope
         }
-        if(sumope != ""){
-            sumcalc()
+        if prevbtn == "+-" || prevbtn == "*/"{
+            proope = ope
         }
-        common()
-        sumope = "-"
+        if prevbtn == "="{
+            tmpnum = shownum
+            proope = ope
+        }
+        prevbtn = "*/"
+        show()
     }
-    @IBAction func productbtn(){
-        if(proope != ""){
-            procalc()
-        }
-        common()
-        proope = "*"
-    }
-    @IBAction func dividebtn(){
-        if(proope != ""){
-            procalc()
-        }
-        common()
-        proope = "/"
-    }
+    
+
+    
     @IBAction func clearbtn(){
         initialize()
-        common()
+        show()
     }
     
     @IBAction func equalbtn(){
-        if(proope != ""){
-            procalc()
+        if prevbtn == "num"{
+            tmpnum = shownum
+            strongCalc()
         }
-        if(sumope != ""){
-            sumcalc()
+        if prevbtn == "+-" || prevbtn == "*/"{
+            //!!未実装
         }
-        common()
-        eq = true
+        if prevbtn == "="{
+            //pass
+        }
+        show()
+        prevbtn = "="
     }
     
-    func sumcalc(){
-        if(sumope == ""){
-            print("Uh Oh...(sum)")
-        } else if (sumope == "+"){
-            sum += pro
-        } else if (sumope == "-"){
-            sum -= pro
-        }
-        sumope = ""
-        pro = 0
-    }
-    
-    func procalc(){
-        if(proope == ""){
-            print("Uh Oh...(pro)")
-        } else if (proope == "*"){
+    func weakCalc(){
+        if proope == "*"{
             pro *= tmpnum
-        } else if (proope == "/"){
-            if (tmpnum == 0){
-                ZeroDivisionError()
-            } else {
-                pro /= tmpnum
-            }
         }
-        proope = ""
+        if proope == "/"{
+            if tmpnum == 0{
+                ZeroDivisionError()
+                return
+            }
+            pro /= tmpnum
+        }
+        if proope == ""{
+            pro = tmpnum
+        }
+        if proope == "*" || proope == "/"{
+            tmpnum = 0
+            shownum = pro
+        }
+    }
+    
+    func strongCalc(){
+        if proope == "*"{
+            pro *= tmpnum
+            tmpnum = pro
+        }
+        if proope == "/"{
+            if tmpnum == 0{
+                ZeroDivisionError()
+                return
+            }
+            pro /= tmpnum
+            tmpnum = pro
+        }
+        if sumope == "+" {
+            sum += tmpnum
+        }
+        if sumope == "-" {
+            sum -= tmpnum
+        }
         tmpnum = 0
+        shownum = sum
     }
     
     func numbtn(num:Int){
-        if(eq){
+        if prevbtn == "num"{
+            shownum *= 10
+            shownum += num
+        }
+        if prevbtn == "+-" || prevbtn == "*/"{
+            shownum = num
+        }
+        if prevbtn == "="{
             initialize()
+            shownum = num
         }
-        if(proope==""){
-            pro *= 10
-            pro += num
-        } else {
-            tmpnum *= 10
-            tmpnum += num
-        }
-        common()
+        show()
+        prevbtn = "num"
     }
     
-    func common(){
-        eq = false
-        print(sum, pro, tmpnum)
-        if(proope==""){
-            lbl.text = String(pro)
-        } else {
-            lbl.text = String(tmpnum)
-        }
-    }
+
     
     func ZeroDivisionError(){
+        initialize()
         lbl.text = "Zero Division Error"
     }
     
